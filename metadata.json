@@ -1,0 +1,5 @@
+{
+  "name": "LinkedIn to Newsletter Converter",
+  "description": "Convert LinkedIn posts into structured email newsletters with a header, bullet points, and conclusion using AI.",
+  "requestFramePermissions": []
+}
