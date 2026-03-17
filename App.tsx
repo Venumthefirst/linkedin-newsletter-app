@@ -36,6 +36,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [tone, setTone] = useState<'Professional' | 'Punchy' | 'Storyteller'>('Professional');
 
   const handleClear = () => {
     setInput('');
@@ -43,20 +44,29 @@ export default function App() {
     setError(null);
   };
 
-  const systemInstructions = `
-    You are an expert Content Strategist and Ghostwriter. Your task is to transform high-performing, 'hooky' LinkedIn posts into professional, value-driven email newsletters.
+  const getSystemInstructions = (selectedTone: string) => {
+    const base = `
+      You are an expert Content Strategist and Ghostwriter. Your task is to transform high-performing, 'hooky' LinkedIn posts into professional, value-driven email newsletters.
 
-    The Rules:
-    1. De-LinkedIn: Remove all 'broetry' (excessive one-sentence paragraphs), hashtags, and engagement bait (e.g., 'Agree?', 'Thoughts?').
-    2. Tone: Professional, insightful, and concise. Avoid 'AI-isms' like 'In the ever-evolving landscape' or 'In today's fast-paced world.'
-    3. Output: You must provide a structured JSON response.
+      The Rules:
+      1. De-LinkedIn: Remove all 'broetry' (excessive one-sentence paragraphs), hashtags, and engagement bait (e.g., 'Agree?', 'Thoughts?').
+      2. Output: You must provide a structured JSON response.
 
-    Structure:
-    - Subject Line: A compelling subject line.
-    - Intro: An intro that sets the context.
-    - Deep Dive: Exactly 3 clear bullet points.
-    - Closing Thought: A closing thought that sounds like a human wrote it.
-  `;
+      Structure:
+      - Subject Line: A compelling subject line.
+      - Intro: An intro that sets the context.
+      - Deep Dive: Exactly 3 clear bullet points.
+      - Closing Thought: A closing thought that sounds like a human wrote it.
+    `;
+
+    const toneSpecific = {
+      Professional: "Tone: Professional, insightful, and concise. Avoid 'AI-isms' like 'In the ever-evolving landscape' or 'In today's fast-paced world.'",
+      Punchy: "Tone: Short, high-impact, and direct. Use strong verbs and minimal fluff. Get straight to the value.",
+      Storyteller: "Tone: Narrative-driven, engaging, and relatable. Frame the insights within a brief story or personal lesson context."
+    }[selectedTone as keyof typeof toneSpecific];
+
+    return `${base}\n\n${toneSpecific}`;
+  };
 
   const generateNewsletter = async () => {
     if (!input.trim()) return;
@@ -73,7 +83,7 @@ export default function App() {
         model: model,
         contents: [{ parts: [{ text: prompt }] }],
         config: {
-          systemInstruction: systemInstructions,
+          systemInstruction: getSystemInstructions(tone),
           responseMimeType: "application/json",
           responseSchema: {
             type: "object",
@@ -173,6 +183,24 @@ ${result.closingThought}
                 className="w-full h-64 p-6 rounded-2xl border border-slate-200 bg-white shadow-[0_2px_10px_rgba(0,0,0,0.02)] focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all resize-none outline-none text-slate-700 leading-relaxed text-base"
               />
             </div>
+
+            {/* Tone Selection */}
+            <div className="flex flex-wrap gap-2">
+              {(['Professional', 'Punchy', 'Storyteller'] as const).map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setTone(t)}
+                  className={`px-4 py-2 rounded-full text-xs font-bold tracking-wide transition-all border ${
+                    tone === t
+                      ? 'bg-orange-600 border-orange-600 text-white shadow-md shadow-orange-100'
+                      : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50'
+                  }`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+
             <div className="flex flex-col sm:flex-row gap-3">
               <button
                 onClick={generateNewsletter}
